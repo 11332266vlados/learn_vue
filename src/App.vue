@@ -1,111 +1,88 @@
 <template>
-  <section class="catalog">
-    <ul class="catalog__list">
-      <li class="catalog__item" v-for="(product, index) in products" v-bind:key="index">
-        <a class="catalog__pic" href="#">
-          <img :src="product.image" :alt="product.title">
-        </a>
+  <main class="content container">
+    <div class="content__top content__top--catalog">
+      <h1 class="content__title">
+        Каталог
+      </h1>
+      <span class="content__info">
+        152 товара
+      </span>
+    </div>
 
-        <h3 class="catalog__title">
-          <a href="#">
-            {{ product.title }}
-          </a>
-        </h3>
+    <div class="content__catalog">
 
-        <span class="catalog__price">
-            {{ product.price }} ₽
-            </span>
+      <productFilter
+      :filter-category.sync   = "filterCategory"
+      :filter-price-from.sync = "filterPriceFrom"
+      :filter-price-to.sync   = "filterPriceTo"
+      :filter-color.sync      = "filterColor"
+      />
 
-        <ul class="colors colors--black">
-          <li class="colors__item">
-            <label class="colors__label" for="color_1_8BE000">
-              <input class="colors__radio sr-only" type="radio" id="color_1_8BE000"
-                     name="color-1" value="#73B6EA"
-                     checked="">
-              <span class="colors__value" style="background-color: #73B6EA;">
-                  </span>
-            </label>
-          </li>
-          <li class="colors__item">
-            <label class="colors__label" for="color_1_8BE000">
-              <input class="colors__radio sr-only" type="radio" id="color_1_8BE000"
-                     name="color-1" value="#8BE000">
-              <span class="colors__value" style="background-color: #8BE000;">
-                  </span>
-            </label>
-          </li>
-          <li class="colors__item">
-            <label class="colors__label" for="color_1_222">
-              <input class="colors__radio sr-only" type="radio"
-                     id="color_1_222" name="color-1" value="#222">
-              <span class="colors__value" style="background-color: #222;">
-                  </span>
-            </label>
-          </li>
-        </ul>
-      </li>
-    </ul>
+      <section class="catalog">
+        <productList :products="products"/>
+        <basePagination :page.sync="page" :count="countProducts" :per-page="productsPerPage"/>
+      </section>
 
-    <ul class="catalog__pagination pagination">
-      <li class="pagination__item">
-        <a class="pagination__link pagination__link--arrow pagination__link--disabled"
-           aria-label="Предыдущая страница">
-          <svg width="8" height="14" fill="currentColor">
-            <use xlink:href="#icon-arrow-left"></use>
-          </svg>
-        </a>
-      </li>
-      <li class="pagination__item">
-        <a class="pagination__link pagination__link--current">
-          1
-        </a>
-      </li>
-      <li class="pagination__item">
-        <a class="pagination__link" href="#">
-          2
-        </a>
-      </li>
-      <li class="pagination__item">
-        <a class="pagination__link" href="#">
-          3
-        </a>
-      </li>
-      <li class="pagination__item">
-        <a class="pagination__link" href="#">
-          4
-        </a>
-      </li>
-      <li class="pagination__item">
-        <a class="pagination__link" href="#">
-          ...
-        </a>
-      </li>
-      <li class="pagination__item">
-        <a class="pagination__link" href="#">
-          10
-        </a>
-      </li>
-      <li class="pagination__item">
-        <a class="pagination__link pagination__link--arrow" href="#"
-           aria-label="Следующая страница">
-          <svg width="8" height="14" fill="currentColor">
-            <use xlink:href="#icon-arrow-right"></use>
-          </svg>
-        </a>
-      </li>
-    </ul>
-  </section>
+    </div>
+  </main>
+
 </template>
 
 <script>
 import products from './data/products';
+import productList from './components/productList.vue';
+import basePagination from './components/basePagination.vue';
+import productFilter from './components/productFilter.vue';
 
 export default {
   name: 'App',
+  components: {
+    productList,
+    basePagination,
+    productFilter,
+  },
+
   data() {
     return {
-      products,
+      filterPriceFrom: 0,
+      filterPriceTo: 0,
+      filterCategory: 0,
+      filterColor: 0,
+
+      page: 1,
+      productsPerPage: 2,
     };
+  },
+  computed: {
+    filteredProducts() {
+      let filteredProducts = products;
+      if (this.filterPriceFrom > 0) {
+        // eslint-disable-next-line max-len
+        filteredProducts = filteredProducts.filter((product) => product.price > this.filterPriceFrom);
+      }
+
+      if (this.filterPriceTo > 0) {
+        filteredProducts = filteredProducts.filter((product) => product.price < this.filterPriceTo);
+      }
+
+      if (this.filterCategory > 0) {
+        // eslint-disable-next-line max-len
+        filteredProducts = filteredProducts.filter((product) => product.categoryId === this.filterCategory);
+      }
+
+      if (this.filterColor > 0) {
+        // eslint-disable-next-line max-len
+        filteredProducts = filteredProducts.filter((product) => product.colorId === this.filterColor);
+      }
+      return filteredProducts;
+    },
+    products() {
+      const offset = ((this.page - 1) * this.productsPerPage);
+      return this.filteredProducts.slice(offset, offset + this.productsPerPage);
+    },
+    countProducts() {
+      return this.filteredProducts.length;
+    },
   },
 };
 </script>
